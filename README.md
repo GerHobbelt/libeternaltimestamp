@@ -19,7 +19,7 @@ This timestamp is useful for any of these purposes:
 
 ## History
 
-First concept was written here:
+First concept was written here: [Qiqqa timestamp design considerations](https://github.com/jimmejardine/qiqqa-open-source/blob/master/docs-src/Notes/Progress%20in%20Development/Considering%20the%20Way%20Forward/Database%20Design/Storing%20a%20wide%20range%20of%20date%2Btime-stamps%20of%20arbitrary%20precision%20in%20a%2064-bit%20number.md)
 
 
 
