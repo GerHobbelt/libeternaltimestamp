@@ -16,7 +16,7 @@ This timestamp is useful for any of these purposes:
 - like to store reasonably precise timestamps back to the estimated creation of our planet. The **scientific estimate**, that is. That's a couple *billion* years ago... Maybe you want/neeed to go back even further: this date/timestamp *carries the day*. Both *figuratively* and *literally*.
 - need to compare many date/timestamps like that, and pretty fast too. For you, we've ensured this timestamp, encoded in a `int64_t` integer value, is nicely incremental over the entire date/time range: "*older*" is just a \< (less than) integer comparison away, "*equality*" is just applying the `==` integer operation.
 - need a date/timestamp that's *comparable* (i.e. *which is older/newer?*) and *sortable* (so you can produce an *ordered list* of these dates (plus the other row data).
-- a looking for a date/timestamp which can store both complete *and* **partial date/times**, e.g. "15 August @ 09:00" (no year given, no seconds, nor subseconds) -- and use those in any mix, with a sort order of your choice (several sort criteria functions are available off the shelf).
+- are looking for a date/timestamp which can store both complete *and* **partial date/times**, e.g. "15 August @ 09:00" (no year given, no seconds, nor subseconds) -- and use those in any mix, with a sort order of your choice (several sort criteria functions are available off the shelf).
 
 
 ## History
