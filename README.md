@@ -6,7 +6,7 @@ Special attention is paid to the period where humanity has been writing: you can
 
 This timestamp is useful for any of these purposes:
 
-- you are working with databases and are looking for a non-time_t / 2038AD catastrophic date/time field type
+- you are working with databases and are looking for a non-`time_t` / 2038AD catastrophic date/time field type ([the looming UNIX Y2K event](https://en.wikipedia.org/wiki/Year_2038_problem))
 - prefer your date/timestamps encoded as a plain 64 bit integer so you can use them as a fast unique key too in arbitrary databases & tables (next to using it as a regular field value)
 - you want to use high precision date/timestamps for any new or old written material, e.g. when working in a library or recording archeological data
 - plan to use this type as an Sqlite extension
