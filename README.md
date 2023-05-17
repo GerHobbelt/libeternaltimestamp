@@ -28,3 +28,33 @@ First concept was written here: [Qiqqa timestamp design considerations](https://
 [^1]: by design, we encode *all date/timestamps* in the lower 63 bits, i.e. we DO NOT use the *negative values*, thus excluding any possible confusion *anywhere* in your software between `uint64_t` ("*unsigned* integer") and `int64_t` ("*signed* integer) types -- something that can easily happen in large(r) codebases and multi-component systems. It also means our date/timestamps can be used *directly* as PRIMARY/UNIQUE KEY in any database, delivering fast access due to the timestamp being a single (64 bit wide) INTEGER element. If you want to know more technical details about the timestamp design/layout, see the analysis in the "History" section.
 
 
+
+
+
+## Building using CMake
+
+Create the `build` directory and configure the build system:
+
+```bash
+cmake -B build # Or `cmake -D BUILD_TESTING=OFF -B build` to skip tests. 
+```
+
+Build the project:
+
+```bash
+cmake --build build
+```
+
+Inspect the `build` directory to find the application and the tests.
+
+Optionally, run the tests with `ctest` by typing:
+
+```bash
+cmake -E chdir build ctest
+```
+
+Run the demo application by typing:
+
+```bash
+cmake -E chdir build demo/eternal-demo
+```
