@@ -1,6 +1,6 @@
 # lib::eternal_timestamp
 
-small C/C++ header / library which provides (encodes/decodes) `int64_t` 64-bit integer timestamps which can encode any *partially known* or *wholly complete* date/time in the lifetime of our planet up to about 3000 AD in the future.
+small C/C++ header / library which provides (encodes/decodes) `int64_t` 64-bit integer timestamps which can encode any *partially known* or *wholly complete* date/time in the lifetime of our planet up to about 3000 AD in the future. (When you extend the format to use the sign bit (bit 63) you can encode any date/time until the End Of Days / Armageddon ... and beyond.)
 
 Special attention is paid to the period where humanity has been writing: you can specify dates & times back to about 20,000BC in at least milisecond precision. Dates older than that are slightly less precise.
 
