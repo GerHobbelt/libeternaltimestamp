@@ -14,37 +14,37 @@ extern "C" {
 
 struct eternal_modern_timestamp 
 {
-	unsigned dummy: 1;
-	unsigned mode: 1;     // MUST be ZERO.
+	unsigned sign: 1;			// MUST be ZERO.
+	unsigned mode: 1;			// MUST be ZERO.
 
-	// legal values for each field are 0..N-1; highest possible value for the bitfield is the 'magic value' indicating 'not specified'.
+	// legal values for each field are 1..N; ZERO(0) value for the bitfield is the 'magic value' indicating 'not specified'.
 
-	unsigned century: 9;
+	unsigned century: 9;		/// legal century values are 1..2^9-1(=511), year 0 signals "unpecified", while the other values are offsets towards history from 3000 AD (epoch)
 	unsigned year: 7;
 	unsigned month: 4;
-	unsigned day: 5;     // NOTE: legal day numbers are 0..30, NOT 1..31 as you might assume!
-	unsigned hour: 5;
-	unsigned minute: 6;
-	unsigned seconds: 6;
-	unsigned milliseconds: 10;
-	unsigned microseconds: 10;
+	unsigned day: 5;
+	unsigned hour: 5;			/// legal hours are 1..24, NOT 0..23 as you might assume!
+	unsigned minute: 6;         /// legal minute values are 1..60, NOT 0..59 as you might assume!
+	unsigned seconds: 6;        /// legal second values are 1..60, NOT 0..59 as you might assume!
+	unsigned milliseconds: 10;  /// legal millisecond values are 1..1000, NOT 0..999 as you might assume!
+	unsigned microseconds: 10;  /// ditto!
 };
 
 // available range: 48200 BC .. Big Bang & before.
 
 struct eternal_prehistoric_timestamp 
 {
-	unsigned dummy: 1;
-	unsigned mode: 1;     // MUST be ONE.
+	unsigned sign: 1;			// MUST be ZERO.
+	unsigned mode: 1;			// MUST be ONE.
 
-	// legal values for each field are 0..N-1; highest possible value for the bitfield is the 'magic value' indicating 'not specified'.
+	// legal values for each field are 1..N; ZERO(0) value for the bitfield is the 'magic value' indicating 'not specified'.
 
-	uint64_t years: 38;
+	uint64_t years: 38;		    /// legal century values are 1..2^38-1, year 0 signals "unpecified", while the other values are offsets towards history from 0 AD (epoch)
 	unsigned month: 4;
-	unsigned day: 5;     // NOTE: legal day numbers are 0..30, NOT 1..31 as you might assume!
-	unsigned hour: 5;
-	unsigned minute: 6;
-	unsigned precision: 4;    // power of 10 for the years
+	unsigned day: 5;
+	unsigned hour: 5;			/// legal hours are 1..24, NOT 0..23 as you might assume!
+	unsigned minute: 6;			/// legal minute values are 1..60, NOT 0..59 as you might assume!
+	unsigned precision: 4;      /// the power of 10 for the years; e.g. "approx. 100000
 };
 
 typedef union eternal_timestamp_u 
