@@ -294,7 +294,7 @@ Next to that, we've been looking at Full Text Search Databases, such as [SOLR](h
 
 ##### Why don't we get bothered by [JavaScript's 53-bit integer value limit](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER) then?
 
-While [JavaScript has a known 53-bit `MAX_SAFE_INTEGER` range](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER) *and we know* that JavaScript will play a significant role in upcoming Qiqqa rebuild/development, we already (implicitly) decided to take that restriction into account when designing our timestamp format: when transported into JavaScript, our timestamp can be represented by a string or floating point value, depending on the actual requirements.
+While JavaScript has a [known 53-bit `MAX_SAFE_INTEGER` range](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER) and we realise that JavaScript will play a significant role in the upcoming Qiqqa rebuild/development, we already (implicitly) decided to take that restriction into account when designing our timestamp format: when transported into JavaScript, our timestamp can be represented by a string or floating point value, depending on the actual requirements.
 
 Meanwhile we could store our timestamps in a JavaScript floating point value (equivalent to a C 64-bit IEEE754 `double`) where the floating point precision would generally be sufficient to encode relatively recent dates at microsecond resolution, while resolution would degrade for dates reaching back into antiquity, but more importantly we would loose our ability to encode *partial timestamps*, i.e. timestamps where one or more parts are missing/unknown.
 
