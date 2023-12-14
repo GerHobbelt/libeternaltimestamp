@@ -44,7 +44,7 @@ struct eternal_prehistoric_timestamp
 	unsigned day: 5;
 	unsigned hour: 5;			/// legal hours are 1..24, NOT 0..23 as you might assume!
 	unsigned minute: 6;			/// legal minute values are 1..60, NOT 0..59 as you might assume!
-	unsigned precision: 4;      /// the power of 10 for the years; e.g. "approx. 100000
+	unsigned precision: 4;      /// the power of 10 for the years; e.g. "approx. 100000 years ago"
 };
 
 typedef union eternal_timestamp_u 
