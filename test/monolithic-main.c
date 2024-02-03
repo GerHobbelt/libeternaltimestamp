@@ -8,6 +8,8 @@
 MONOLITHIC_CMD_TABLE_START()
 	{ "test_c", { .fa = eternalty_test_c_main } },
 	{ "test_cpp", { .fa = eternalty_test_cpp_main } },
+    { "demo", {.fa = eternalty_demo_main } },
+
 MONOLITHIC_CMD_TABLE_END();
 
 #include "monolithic_main_tpl.h"

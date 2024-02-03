@@ -1,5 +1,5 @@
 
-#include <eternal_timestamp>
+#include <eternal_timestamp/eternal_timestamp.h>
 #include <cstdio>
 #include <cstdlib>
 

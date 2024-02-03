@@ -10,6 +10,8 @@ extern "C" {
 extern int eternalty_test_c_main(int argc, const char** argv);
 extern int eternalty_test_cpp_main(int argc, const char** argv);
 
+extern int eternalty_demo_main(int argc, const char** argv);
+
 #ifdef __cplusplus
 }
 #endif
