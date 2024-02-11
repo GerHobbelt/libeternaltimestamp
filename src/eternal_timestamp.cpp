@@ -3,6 +3,9 @@
 #include "eternal_timestamp/eternal_timestamp.h"
 #endif
 
+#include <chrono>
+#include <ctime>
+
 #ifndef NDEBUG
 #include <stdio.h>
 #include <stdlib.h>
@@ -752,27 +755,213 @@ int EternalTimestamp::cvt_to_proleptic_real(double &dst, const eternal_timestamp
 }
 
 
-int EternalTimestamp::cvt_from_timeinfo_struct(eternal_timestamp_t &dst, const struct eternal_time_tm &t)
+int EternalTimestamp::cvt_from_timeinfo_struct(eternal_timestamp_t &dst, const struct eternal_time_tm &ts)
 {
-	return 0;
+	int64_t y = ts.large_year;
+	if (y == 0)
+		y = ts.year;
+
+	bool is_modern = (y <= -MODERN_EPOCH);
+	bool has_epoch = true;
+	if (ts.unspecified & (1 << ETTS_UNSPECIFIED_EPOCHS)) {
+		is_modern = true;
+		has_epoch = false;
+	}
+
+	if (is_modern) {
+		eternal_modern_timestamp t{0};
+
+		y += MODERN_EPOCH;
+		ETS_ASSERT(y > 0);
+
+		if (!has_epoch) {
+			t.century = get_Invalid(ETMT_FIELDSIZE_CENTURY);
+		}
+		else {
+			t.century = y / 100;
+		}
+		y %= 100;
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_YEARS)) {
+			t.year = get_Invalid(ETMT_FIELDSIZE_YEAR);
+		}
+		else {
+			t.year = FIELD_VAL_OFFSET + y;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_MONTHS)) {
+			t.month = get_Invalid(ETMT_FIELDSIZE_MONTH);
+		} else {
+			t.month = FIELD_VAL_OFFSET - 1 + ts.month;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_DAYS)) {
+			t.day = get_Invalid(ETMT_FIELDSIZE_DAY);
+		} else {
+			t.day = FIELD_VAL_OFFSET - 1 + ts.day;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_HOURS)) {
+			t.hour = get_Invalid(ETMT_FIELDSIZE_HOUR);
+		} else {
+			t.hour = FIELD_VAL_OFFSET + ts.hour;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_MINUTES)) {
+			t.minute = get_Invalid(ETMT_FIELDSIZE_MINUTE);
+		} else {
+			t.minute = FIELD_VAL_OFFSET + ts.minute;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_SECONDS)) {
+			t.seconds = get_Invalid(ETMT_FIELDSIZE_SECONDS);
+		} else {
+			t.seconds = FIELD_VAL_OFFSET + ts.seconds;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_MILLISECONDS)) {
+			t.milliseconds = get_Invalid(ETMT_FIELDSIZE_MILLISECONDS);
+		} else {
+			t.milliseconds = FIELD_VAL_OFFSET + ts.milliseconds;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_MICROSECONDS)) {
+			t.microseconds = get_Invalid(ETMT_FIELDSIZE_MICROSECONDS);
+		} else {
+			t.microseconds = FIELD_VAL_OFFSET + ts.microseconds;
+		}
+
+		// t value is now a positive offset value from 10000 BC.
+		dst.modern = t;
+		return 0;
+	} else {
+		eternal_prehistoric_timestamp t{0};
+
+		t.mode = 1;
+
+		y = PREHISTORIC_EPOCH - y;
+		ETS_ASSERT(y > 0);
+
+		ETS_ASSERT(has_epoch);
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_YEARS)) {
+			t.precision = 2;
+		} else {
+			t.precision = 0;
+		}
+		t.years = y;
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_MONTHS)) {
+			t.month = get_Invalid(ETMT_FIELDSIZE_MONTH);
+		} else {
+			t.month = FIELD_VAL_OFFSET - 1 + ts.month;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_DAYS)) {
+			t.day = get_Invalid(ETMT_FIELDSIZE_DAY);
+		} else {
+			t.day = FIELD_VAL_OFFSET - 1 + ts.day;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_HOURS)) {
+			t.hour = get_Invalid(ETMT_FIELDSIZE_HOUR);
+		} else {
+			t.hour = FIELD_VAL_OFFSET + ts.hour;
+		}
+
+		if (ts.unspecified & (1 << ETTS_UNSPECIFIED_MINUTES)) {
+			t.minute = get_Invalid(ETMT_FIELDSIZE_MINUTE);
+		} else {
+			t.minute = FIELD_VAL_OFFSET + ts.minute;
+		}
+
+		// t value is now a positive offset value from 0 AD back into history.
+		dst.prehistoric = t;
+		return 0;
+	}
 }
 
 int EternalTimestamp::cvt_from_time_t(eternal_timestamp_t &dst, const time_t t)
 {
-	return 0;
+	// as per https://stackoverflow.com/questions/68548288/convert-utc-time-t-to-utc-tm
+	using namespace std::chrono;
+
+	std::chrono::sys_seconds tp = sys_seconds{seconds{t}};
+
+	auto td = floor<days>(tp);
+	year_month_day ymd = td;
+	hh_mm_ss<seconds> tod{tp - td};  // <seconds> can be omitted in C++17
+	tm ts{};
+	ts.tm_sec  = tod.seconds().count();
+	ts.tm_min  = tod.minutes().count();
+	ts.tm_hour = tod.hours().count();
+	ts.tm_mday = unsigned{ymd.day()};
+	ts.tm_mon  = (ymd.month() - January).count();
+	ts.tm_year = (ymd.year() - 1900y).count();
+	//ts.tm_wday = weekday{td}.c_encoding();
+	//ts.tm_yday = (td - sys_days{ymd.year()/January/1}).count();
+	ts.tm_isdst = 0;
+
+	return cvt_from_tm(dst, ts);
 }
 
 int EternalTimestamp::cvt_from_tm(eternal_timestamp_t &dst, const struct tm &t)
 {
-	return 0;
+	struct eternal_time_tm ts{0};
+
+	ts.large_year = ts.year = t.tm_year + 1900;
+	ts.month = t.tm_mon + 1;
+	ts.day = t.tm_mday;
+	ts.hour = t.tm_hour;
+	ts.minute = t.tm_min;
+	ts.seconds = t.tm_sec;
+
+	return cvt_from_timeinfo_struct(dst, ts);
 }
 
 #if defined(_WIN32) || defined(_WIN64)
-int EternalTimestamp::cvt_from_Win32FileTime(eternal_timestamp_t &dst, const FILETIME &t)
+int EternalTimestamp::cvt_from_Win32FileTime(eternal_timestamp_t &dst, const FILETIME &ft)
 {
+	SYSTEMTIME st;
+	eternal_modern_timestamp t{0};
+
+	uint64_t tt = ft.dwHighDateTime;
+	tt <<= 32;
+	tt += ft.dwLowDateTime;
+
+	const uint64_t FREQ = (static_cast<uint64_t>(1e9) / 100);
+	int32_t ss = tt % FREQ;
+	int32_t ms = ss / 10000;
+	int32_t us = ss % 10000;
+	us /= 10;
+
+	ETS_ASSERT(us >= 0);
+	ETS_ASSERT(us < 1000);
+	ETS_ASSERT(ms >= 0);
+	ETS_ASSERT(ms < 1000);
+	t.microseconds = FIELD_VAL_OFFSET + us;
+	t.milliseconds = FIELD_VAL_OFFSET + ms;
+
+	if (FileTimeToSystemTime(&ft, &st)) {
+		int y = st.wYear;
+		y += MODERN_EPOCH;
+		t.century = y / 100;
+		t.year = FIELD_VAL_OFFSET + y % 100;
+		t.month = FIELD_VAL_OFFSET - 1 + st.wMonth;
+		t.day = FIELD_VAL_OFFSET - 1 + st.wDay;
+		t.hour = FIELD_VAL_OFFSET + st.wHour;
+		t.minute = FIELD_VAL_OFFSET + st.wMinute;
+		t.seconds = FIELD_VAL_OFFSET + st.wSecond;
+		t.milliseconds = FIELD_VAL_OFFSET + st.wMilliseconds;
+	} else {
+		ETS_ASSERT(!"Should not get here!");
+	}
+
+	// t value is now a positive offset value from 10000 BC.
+	dst.modern = t;
+
 	return 0;
 }
-
 #endif
 
 // NOTE: our 'epoch' for the IEEEE 754 double type representation is 2000/jan/01@00:00:00.0000 UTC;

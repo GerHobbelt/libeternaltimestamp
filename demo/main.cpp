@@ -72,5 +72,70 @@ int main(int argc, const char **argv)
 {
 	eternal_timestamp_t t = EternalTimestamp::now();
 	std::cout << "now: " << std::format("{:#}", t) << '\n';
+
+	{
+		FILE *f = fopen("test.file", "w");
+		fprintf(f, "heelo world\n");
+		fclose(f);
+	}
+
+#ifdef _WIN32
+	{
+		auto h = CreateFileA("test.file", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		FILETIME at, mt, ct;
+		GetFileTime(h, &ct, &at, &mt);
+
+		EternalTimestamp::cvt_from_Win32FileTime(t, mt);
+		std::cout << "file modify time (now): " << std::format("{:#}", t) << '\n';
+
+		struct tm ti{0};
+		ti.tm_year = 1980;
+		ti.tm_mon = 5;
+		ti.tm_mday = 21;
+		ti.tm_hour = 9;
+		ti.tm_sec = 35;
+		ti.tm_isdst = 0;
+		time_t tt = mktime(&ti);
+
+		EternalTimestamp::cvt_from_time_t(t, tt);
+		std::cout << "time_t @ 1980/5/21 @ 09:00:35: " << std::format("{:#}", t) << '\n';
+
+		FILETIME ft;
+		ULARGE_INTEGER time_value;
+		time_value.QuadPart = (tt * 10000000LL) + 116444736000000000LL;
+		ft.dwLowDateTime = time_value.LowPart;
+		ft.dwHighDateTime = time_value.HighPart;
+
+		EternalTimestamp::cvt_from_Win32FileTime(t, ft);
+		std::cout << "ditto FILETIME: " << std::format("{:#}", t) << '\n';
+
+		SetFileTime(h, &ft, &ft, &ft);
+		CloseHandle(h);
+	}
+#else
+	{
+		struct stat st;
+		struct utimbuf ubuf;
+		int result;
+
+		result = stat("test.file", &st);
+
+		ubuf.actime  = st.st_atime;
+		ubuf.modtime = st.st_mtime;
+
+		result = utime("test.file", &ubuf);
+	}
+#endif
+
+	{
+		struct stat st;
+		int result;
+
+		result = stat("test.file", &st);
+
+		EternalTimestamp::cvt_from_time_t(t, st.st_mtime);
+		std::cout << "modified file timestamp: " << std::format("{:#}", t) << '\n';
+	}
+
 	return 0;
 }
