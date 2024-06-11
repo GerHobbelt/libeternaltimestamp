@@ -39,12 +39,14 @@ enum fieldsize : unsigned int
 	ETPHT_FIELDSIZE_PRECISION = 4,
 };
 
+// Produce the "this-is-invalid-or-unknown" value for this field, being the maximum value available.
 constexpr inline unsigned int get_MaxInvalid(unsigned int field_size_in_bits)
 {
 	const unsigned int invalid = (1 << field_size_in_bits) - 1;
 	return invalid;
 }
 
+// Produce the "this-is-invalid-or-unknown" value for this field, being the minimum value available.
 constexpr inline unsigned int get_MinInvalid(unsigned int field_size_in_bits)
 {
 	const unsigned int invalid = 0;
@@ -54,17 +56,26 @@ constexpr inline unsigned int get_MinInvalid(unsigned int field_size_in_bits)
 
 #if ETS_UNSPECIFIED_MARKER_SORTS_BEFORE_1ST_VALUE
 
+// Produce the "this-is-invalid-or-unknown" value for this field.
 constexpr inline unsigned int get_Invalid(unsigned int field_size_in_bits)
 {
 	return get_MinInvalid(field_size_in_bits);
 }
 
-// clip value to legal range or signal as 'invalid':
+// Clip the field value to its legal range or signal it as 'invalid'.
+//
+// - `v` is the field value to clip.
+// - `field_size_in_bits` is the field's size in bits.
+// - `value_range` is the legal range for this field's value. For example, for the hour field this would be 24.
+//
+// As the eternal_timestamp library is compiled as using 0 for the field's invalid value,
+// the actual legal value range is $[1,\text{value_range}]$, which f.e. for the hour field would then
+// be the range $[1,24]$.
 constexpr inline unsigned int clip_Invalid(int v, unsigned int field_size_in_bits, int value_range)
 {
 	const unsigned int invalid = get_Invalid(field_size_in_bits);
 	v++;
-	// clip
+	// clip to value range [1..value_range]
 	if (v <= 0)
 		return invalid;
 	if (v > value_range)
@@ -76,12 +87,21 @@ static constexpr int FIELD_VAL_OFFSET = 1;
 
 #else
 
+// Produce the "this-is-invalid-or-unknown" value for this field.
 constexpr inline unsigned int get_Invalid(unsigned int field_size_in_bits)
 {
 	return get_MaxInvalid(field_size_in_bits);
 }
 
-// clip value to legal range or signal as 'invalid':
+// Clip the field value to its legal range or signal it as 'invalid'.
+//
+// - `v` is the field value to clip.
+// - `field_size_in_bits` is the field's size in bits.
+// - `value_range` is the legal range for this field's value. For example, for the hour field this would be 24.
+//
+// As the eternal_timestamp library is compiled as using the maximum field value for the field's invalid value,
+// the actual legal value range is $[0,\text{value_range}-1]$, which f.e. for the hour field would then
+// be the range $[0,23]$.
 constexpr inline unsigned int clip_Invalid(int v, unsigned int field_size_in_bits, int value_range)
 {
 	const unsigned int invalid = get_MaxInvalid(field_size_in_bits);
@@ -102,6 +122,10 @@ static constexpr const int MODERN_EPOCH = 10000;    // 10000 B.C.
 static constexpr const int PREHISTORIC_EPOCH = 0;   // 0 A.D.
 
 
+// Return the current time/date (timestamp) as an eternal_timestamp value.
+//
+// Notes:
+// - extra feature: we never produce the same timestamp for 'now' by artificially "bumping" it a microsecond or more if needed.
 eternal_timestamp_t EternalTimestamp::now()
 {
 #if defined(_WIN32)
@@ -110,7 +134,6 @@ eternal_timestamp_t EternalTimestamp::now()
 	eternal_modern_timestamp t{0};
 
 	GetSystemTime(&st);
-//	for (int i = 0; i < 20000000; i++) {
 	GetSystemTimePreciseAsFileTime(&ft);  // Contains a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC).
 
 	int y = st.wYear;
@@ -170,7 +193,6 @@ eternal_timestamp_t EternalTimestamp::now()
 	else {
 		ETS_ASSERT(!"Should not get here!");
 	}
-//	}
 
 	// t value is now a positive offset value from 10000 BC.
 	eternal_timestamp_t rv;
@@ -459,12 +481,12 @@ bool EternalTimestamp::is_prehistoric_format(const eternal_timestamp_t t)
 
 // NOTE: this performs a FAST time diff calculation, which will satisfy any LT/LE/EQ/GE/GT check on the calculated delta
 // but DOES NOT produce a time-accurate *distance* per se. You should use Proleptic REAL calcualus for that on, or if that
-// doesn't suit your needs, apply different rules to the conversion of these timestamps to 'time since' values that you want.
+// doesn't suit your needs, apply different rules to the conversion of these timestamps to produce 'time since' values that you want.
 //
 // For our purposes, the (complex!) date/time conversions involved are deemed overkill and thus we stick to a very fast and
 // very basic delta calculus.
 //
-// Returns equivalent of (B - A)
+// Returns equivalent of (t2 - t1)
 int64_t EternalTimestamp::calc_time_fast_delta(const eternal_timestamp_t t1, const eternal_timestamp_t t2)
 {
 	// Notes:
@@ -964,8 +986,8 @@ int EternalTimestamp::cvt_from_Win32FileTime(eternal_timestamp_t &dst, const FIL
 }
 #endif
 
-// NOTE: our 'epoch' for the IEEEE 754 double type representation is 2000/jan/01@00:00:00.0000 UTC;
-// this way we expect most dates/times to have small values and carry highest risdual precision when
+// NOTE: our 'epoch' for the IEEE 754 double type representation is 2000/jan/01@00:00:00.0000 UTC;
+// this way we expect most dates/times to have small values and carry highest risidual precision when
 // you perform calculations with/on these.
 int EternalTimestamp::cvt_from_etdb_real(eternal_timestamp_t &dst, const double t)
 {

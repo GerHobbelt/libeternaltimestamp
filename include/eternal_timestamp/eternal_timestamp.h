@@ -126,7 +126,7 @@ namespace eternal_timestamp
 		// but does a fast validation against the basic rules re the Proleptic Georgian Calender.
 		static bool is_valid(const eternal_timestamp_t t);
 
-		// Sam as `is_valid()` but returns a bitmask identifying the offending fields.
+		// Same as `is_valid()` but returns a bitmask identifying the offending fields.
 		// A negative return value indicates an invalid date/timestamp, while a non-zero positive
 		// return value indicates a valid yet partial timestamp, whee the bitmask identifies the
 		// timestamp fields which signal 'unspecified'.
